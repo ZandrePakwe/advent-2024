@@ -76,3 +76,60 @@ fn is_following_rule(rule: [i32; 2], update: Vec<i32>) -> bool {
 
     return false;
 }
+
+pub fn day_5_part_2() {
+    let (rules, updates) = read_input();
+    let mut total_of_middle_page_numbers = 0;
+
+    for update in updates {
+        if !is_passing_all_rules(&rules, &update) {
+            let mut fixed_update = update.clone();
+
+            for index in 0..update.len() {
+                let (_, rest) = fixed_update.split_at(index);
+                let first_number_of_list = find_first_number_in_list(&rules, rest);
+                let index_of_number_we_need = fixed_update
+                    .iter()
+                    .position(|page_number| *page_number == first_number_of_list)
+                    .unwrap();
+                fixed_update.swap(index_of_number_we_need, index);
+            }
+
+            println!(
+                "{:?} has broken rules, and has been fixed to: {:?}",
+                update, fixed_update
+            );
+
+            let middle_number = fixed_update[fixed_update.len() / 2];
+            println!("{middle_number}");
+            total_of_middle_page_numbers += middle_number;
+        }
+    }
+    println!("{total_of_middle_page_numbers}");
+}
+
+fn is_passing_all_rules(rules: &Vec<[i32; 2]>, update: &Vec<i32>) -> bool {
+    for rule in rules {
+        if !is_following_rule(*rule, update.clone()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn find_first_number_in_list(rules: &Vec<[i32; 2]>, numbers: &[i32]) -> i32 {
+    for number in numbers {
+        let number_of_pages_that_should_be_in_front = rules
+            .iter()
+            .filter(|rule| rule[1] == *number)
+            .map(|rule| rule[0])
+            .filter(|page| numbers.contains(page))
+            .count();
+
+        if number_of_pages_that_should_be_in_front == 0 {
+            return *number;
+        }
+    }
+
+    return numbers[0];
+}
