@@ -69,7 +69,7 @@ pub fn day_4_part_2() {
         let line_at_y: &str = lines[index_y];
         for index_x in 1..line_at_y.len() - 1 {
             let mut mas_diagonals = 0;
-            if (check_for_char_at_index(&lines, 'A', index_x, index_y)) {
+            if check_for_char_at_index(&lines, 'A', index_x, index_y) {
                 if check_for_char_at_index(&lines, 'M', index_x - 1, index_y - 1)
                     && check_for_char_at_index(&lines, 'S', index_x + 1, index_y + 1)
                 {
@@ -92,7 +92,7 @@ pub fn day_4_part_2() {
                     mas_diagonals += 1;
                 }
 
-                if (mas_diagonals == 2) {
+                if mas_diagonals == 2 {
                     occurences_of_xmas += 1;
                 }
             }
