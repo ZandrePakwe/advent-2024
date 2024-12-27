@@ -20,9 +20,21 @@ pub fn day_8_part_1() {
 
     let antennas = get_antenna_groupings(&input);
 
-    let antinodes = calculate_antinode_coordinates(antennas, input.len(), input[1].len());
+    let antinodes = calculate_antinode_coordinates(antennas, input.len(), input[1].len(), true);
 
     // draw_antinodes(&input, antinodes.clone());
+
+    println!("Total of {} antinodes", antinodes.len())
+}
+
+pub fn day_8_part_2() {
+    let input = read_input();
+
+    let antennas = get_antenna_groupings(&input);
+
+    let antinodes = calculate_antinode_coordinates(antennas, input.len(), input[1].len(), false);
+
+    draw_antinodes(&input, antinodes.clone());
 
     println!("Total of {} antinodes", antinodes.len())
 }
@@ -56,6 +68,7 @@ fn calculate_antinode_coordinates(
     antenna_grouping: HashMap<char, Vec<Coordinate>>,
     x_max: usize,
     y_max: usize,
+    limit_to_first: bool,
 ) -> HashSet<Coordinate> {
     let mut antinode_coordinates = HashSet::<Coordinate>::new();
 
@@ -67,12 +80,15 @@ fn calculate_antinode_coordinates(
             let remaining_coordinates = new_coordinates.clone();
 
             for comparison_coordinate in remaining_coordinates {
-                let (antinode_1, antinode_2) =
-                    calculate_antinodes(&current_coordinate, &comparison_coordinate, x_max, y_max);
-                if let Some(antinode) = antinode_1 {
-                    antinode_coordinates.insert(antinode);
-                }
-                if let Some(antinode) = antinode_2 {
+                let antinodes = calculate_antinodes(
+                    &current_coordinate,
+                    &comparison_coordinate,
+                    x_max,
+                    y_max,
+                    limit_to_first,
+                );
+
+                for antinode in antinodes {
                     antinode_coordinates.insert(antinode);
                 }
             }
@@ -87,30 +103,53 @@ fn calculate_antinodes(
     comparison_coordinate: &Coordinate,
     x_max: usize,
     y_max: usize,
-) -> (Option<Coordinate>, Option<Coordinate>) {
+    limit_to_first: bool,
+) -> Vec<Coordinate> {
     let delta_x = comparison_coordinate.x as i32 - coordinate.x as i32;
     let delta_y = comparison_coordinate.y as i32 - coordinate.y as i32;
 
-    let x_1 = coordinate.x as i32 - delta_x;
-    let x_2 = comparison_coordinate.x as i32 + delta_x;
-    let y_1 = coordinate.y as i32 - delta_y;
-    let y_2 = comparison_coordinate.y as i32 + delta_y;
-    let mut antinode_1 = None;
-    let mut antinode_2 = None;
-    if x_1 >= 0 && x_1 < x_max as i32 && y_1 >= 0 && y_1 < y_max as i32 {
-        antinode_1 = Some(Coordinate {
+    let mut x_1 = coordinate.x as i32 - delta_x;
+    let mut y_1 = coordinate.y as i32 - delta_y;
+
+    let mut x_2 = comparison_coordinate.x as i32 + delta_x;
+    let mut y_2 = comparison_coordinate.y as i32 + delta_y;
+
+    let mut coordinates = vec![];
+
+    while x_1 >= 0 && x_1 < x_max as i32 && y_1 >= 0 && y_1 < y_max as i32 {
+        coordinates.push(Coordinate {
             x: x_1 as usize,
             y: y_1 as usize,
         });
+
+        if limit_to_first {
+            break;
+        }
+
+        x_1 -= delta_x;
+        y_1 -= delta_y;
     }
-    if x_2 >= 0 && x_2 < x_max as i32 && y_2 >= 0 && y_2 < y_max as i32 {
-        antinode_2 = Some(Coordinate {
+
+    while x_2 >= 0 && x_2 < x_max as i32 && y_2 >= 0 && y_2 < y_max as i32 {
+        coordinates.push(Coordinate {
             x: x_2 as usize,
             y: y_2 as usize,
         });
+
+        if limit_to_first {
+            break;
+        }
+
+        x_2 += delta_x;
+        y_2 += delta_y;
     }
 
-    return (antinode_1, antinode_2);
+    if !limit_to_first {
+        coordinates.push(*comparison_coordinate);
+        coordinates.push(*coordinate);
+    }
+
+    return coordinates;
 }
 
 fn draw_antinodes(input: &Vec<Vec<char>>, antinodes: HashSet<Coordinate>) {
