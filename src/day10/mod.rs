@@ -1,4 +1,7 @@
-use std::{collections::HashSet, fs};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+};
 
 use strum::{EnumIter, IntoEnumIterator};
 
@@ -21,14 +24,27 @@ pub fn day_10_part_1() {
     let input = read_input();
     let starting_points = find_all_start_locations(&input);
     print_board(&input);
-    println!("{:?}", starting_points);
 
     let mut total = 0;
     for point in starting_points {
         let paths_to_summit = find_next_viable_steps_with_directions(&input, point);
-        println!("{}", paths_to_summit.len());
 
         total += paths_to_summit.len();
+    }
+    println!("total: {total}")
+}
+
+pub fn day_10_part_2() {
+    let input = read_input();
+    let starting_points = find_all_start_locations(&input);
+
+    let mut total = 0;
+    for point in starting_points {
+        let paths_to_summit = find_next_viable_steps_with_directions(&input, point);
+
+        for (_, path_count) in paths_to_summit {
+            total += path_count
+        }
     }
     println!("total: {total}")
 }
@@ -50,10 +66,10 @@ fn find_all_start_locations(input: &Vec<Vec<u32>>) -> Vec<Coordinate> {
 fn find_next_viable_steps_with_directions(
     input: &Vec<Vec<u32>>,
     coordinate: Coordinate,
-) -> HashSet<Coordinate> {
+) -> HashMap<Coordinate, usize> {
     let value = input[coordinate.y][coordinate.x];
 
-    let mut summits_reachable = HashSet::new();
+    let mut summits_reachable = HashMap::new();
 
     for direction in Direction::iter() {
         if let Some((value_in_direction, coordinate)) =
@@ -61,11 +77,11 @@ fn find_next_viable_steps_with_directions(
         {
             if (value + 1) == value_in_direction {
                 if value_in_direction == 9 {
-                    summits_reachable.insert(coordinate);
+                    *summits_reachable.entry(coordinate).or_insert(0) += 1;
                 }
                 let summits = find_next_viable_steps_with_directions(input, coordinate);
-                for coordinate in summits {
-                    summits_reachable.insert(coordinate);
+                for (coordinate, count) in summits {
+                    *summits_reachable.entry(coordinate).or_insert(0) += count;
                 }
             }
         }
