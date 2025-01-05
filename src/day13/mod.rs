@@ -1,6 +1,6 @@
 use std::fs;
 
-use peroxide::{fuga::*, traits::float::FloatWithPrecision};
+use peroxide::fuga::*;
 use regex::Regex;
 
 fn read_input() -> Vec<Matrix> {

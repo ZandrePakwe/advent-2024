@@ -1,7 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
     fs,
-    ops::Index,
 };
 
 fn read_input() -> Vec<Vec<char>> {

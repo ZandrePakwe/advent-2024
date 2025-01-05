@@ -44,7 +44,7 @@ pub fn day_1() {
             .filter(|number_2| number_2 == &number)
             .collect();
         
-        similarity_score += (number * number_in_list_2.len() as i64);
+        similarity_score += number * number_in_list_2.len() as i64;
     }
 
     println!("similarity score: {similarity_score}");

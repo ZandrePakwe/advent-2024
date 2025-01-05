@@ -240,14 +240,14 @@ fn rotate_90_deg(direction: &MoveDirection) -> MoveDirection {
     }
 }
 
-fn print_board(input: &Vec<Vec<char>>) {
-    let mut final_string = "".to_string();
-    for column in input {
-        for character in column {
-            final_string += &character.to_string();
-        }
-        final_string += "\n";
-    }
+// fn print_board(input: &Vec<Vec<char>>) {
+//     let mut final_string = "".to_string();
+//     for column in input {
+//         for character in column {
+//             final_string += &character.to_string();
+//         }
+//         final_string += "\n";
+//     }
 
-    println!("{final_string}");
-}
+//     println!("{final_string}");
+// }
