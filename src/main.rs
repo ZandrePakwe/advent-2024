@@ -1,4 +1,4 @@
-use advent_2024::day16::day_16_part_1;
+use advent_2024::{day16::day_16_part_1, day17::{day_17_part_1, day_17_part_2}};
 
 fn main() {
     println!("Hello, Advent of Code!");
@@ -47,5 +47,8 @@ fn main() {
     // day_15_part_1();
     // day_15_part_2();
 
-    day_16_part_1();
+    // day_16_part_1();
+
+    // day_17_part_1();
+    // day_17_part_2();
 }
