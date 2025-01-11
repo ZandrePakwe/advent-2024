@@ -38,7 +38,7 @@ enum Direction {
     Right,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Debug)]
 struct Coordinate {
     x: usize,
     y: usize,
@@ -72,6 +72,7 @@ struct Maze {
     memory_tiles: Vec<Coordinate>,
     max_x: usize,
     max_y: usize,
+    memory_dropped: usize,
 }
 
 impl Maze {
@@ -97,10 +98,34 @@ impl Maze {
             max_y,
             memory_tiles,
             tiles,
+            memory_dropped: 0,
         };
     }
 
+    fn reset(&mut self) {
+        for tile in self.tiles.iter_mut() {
+            tile.1.distance = usize::MAX;
+        }
+    }
+
+    fn find_max_available_time(&mut self) -> Coordinate {
+        let mut shortest_path = self.dijkstra();
+        self.reset();
+
+        while shortest_path < usize::MAX {
+            self.drop_memory(self.memory_dropped + 1);
+            shortest_path = self.dijkstra();
+            self.reset();
+        }
+
+        let coordinate_that_blocks = self.memory_tiles[self.memory_dropped - 1];
+
+        return coordinate_that_blocks;
+    }
+
     fn drop_memory(&mut self, count: usize) {
+        self.memory_dropped = count;
+
         let memory_to_drop = self.memory_tiles[0..count].to_vec();
 
         for item in memory_to_drop {
@@ -219,6 +244,23 @@ pub fn day_18_part_1() {
     println!("shortest path: {}", shortest_path)
 }
 
+pub fn day_18_part_2() {
+    let mut maze = read_input("input");
+
+    maze.drop_memory(1024);
+
+    maze.dijkstra();
+
+    let coordinate_that_blocks = maze.find_max_available_time();
+
+    maze.draw();
+
+    println!(
+        "Coordinate that blocks: {},{}",
+        coordinate_that_blocks.x, coordinate_that_blocks.y
+    )
+}
+
 #[test]
 fn example_input() {
     let mut maze = read_input("example");
@@ -228,4 +270,15 @@ fn example_input() {
     let shortest_path = maze.dijkstra();
 
     assert_eq!(shortest_path, 22)
+}
+
+#[test]
+fn example_input_part_2() {
+    let mut maze = read_input("example");
+
+    maze.drop_memory(12);
+
+    let coordinate_that_blocks = maze.find_max_available_time();
+
+    assert_eq!(coordinate_that_blocks, Coordinate { x: 6, y: 1 })
 }
