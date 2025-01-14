@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fs, usize};
+use std::{
+    collections::{HashMap, HashSet},
+    fs, usize,
+};
 
 use strum::{EnumIter, IntoEnumIterator};
 
@@ -125,18 +128,29 @@ fn get_next_coordinates(
     return result;
 }
 
-fn get_adjacent_track_coordinates(
+fn get_next_coordinates_in_range(
     racetrack: &HashMap<Coordinate, MapTile>,
     coordinate: &Coordinate,
-) -> Vec<Coordinate> {
-    let mut result = vec![];
+    size: usize,
+) -> HashSet<Coordinate> {
+    let mut result = HashSet::new();
+    let size = size as isize;
 
-    for direction in Direction::iter() {
-        let coordinate_to_check = get_coordinate_in_direction(coordinate, direction);
+    let min = size * -1;
+    let max = size;
 
-        if let Some(entry) = racetrack.get(&coordinate_to_check) {
-            if entry.tile != Tile::Wall && entry.distance != usize::MAX {
-                result.push(coordinate_to_check);
+    for x in min..=max {
+        let min = min + x.abs();
+        let max = min * -1;
+        for y in min..=max {
+            let new_coordinate = Coordinate {
+                x: coordinate.x + x,
+                y: coordinate.y + y,
+            };
+            if let Some(entry) = racetrack.get(&new_coordinate) {
+                if entry.tile != Tile::Wall {
+                    result.insert(new_coordinate);
+                }
             }
         }
     }
@@ -169,23 +183,28 @@ fn get_distance_of_track(racetrack: &mut Racetrack) -> usize {
     return end_tile.distance;
 }
 
-fn find_shortcuts(racetrack: &mut Racetrack) -> HashMap<usize, usize> {
+fn find_shortcuts(racetrack: &mut Racetrack, shortcut_length: usize) -> HashMap<usize, usize> {
     let mut shortcuts = HashMap::new();
 
     for (coordinate, tile) in racetrack.tiles.clone() {
-        if tile.tile == Tile::Wall {
-            let adjacent_tiles = get_adjacent_track_coordinates(&racetrack.tiles, &coordinate);
-            let distances = adjacent_tiles
-                .iter()
-                .map(|tile| racetrack.tiles.get(tile).unwrap().distance);
-            let max_distance = distances.clone().max().unwrap_or(0);
+        if tile.tile != Tile::Wall {
+            let adjacent_tiles = get_next_coordinates_in_range(&racetrack.tiles, &coordinate, shortcut_length);
 
-            let min_distance = distances.min().unwrap_or(0);
+            for tile_to_compare in adjacent_tiles {
+                let delta_to_tile = coordinate.x.abs_diff(tile_to_compare.x)
+                    + coordinate.y.abs_diff(tile_to_compare.y);
+                let new_distance_to_tile_after_shortcut = tile.distance + delta_to_tile;
 
-            let gain = max_distance - min_distance;
+                let tile_after_shortcut = racetrack.tiles.get(&tile_to_compare).unwrap();
 
-            if gain > 2 {
-                *shortcuts.entry(gain - 2).or_insert(0) += 1;
+                let time_saved_with_shortcut = tile_after_shortcut.distance as isize
+                    - new_distance_to_tile_after_shortcut as isize;
+
+                if time_saved_with_shortcut > 0 {
+                    *shortcuts
+                        .entry(time_saved_with_shortcut as usize)
+                        .or_insert(0) += 1
+                }
             }
         }
     }
@@ -209,11 +228,29 @@ pub fn day_20_part_1() {
 
     get_distance_of_track(&mut racetrack);
 
-    let shortcuts = find_shortcuts(&mut racetrack);
+    let shortcuts = find_shortcuts(&mut racetrack, 2);
 
     let shortcuts_saving_100_or_more = count_number_of_shortcuts_saving_at_least_100(shortcuts);
 
-    println!("There are {} shortcuts savinf 100 picoseconds or more", shortcuts_saving_100_or_more);
+    println!(
+        "There are {} shortcuts savinf 100 picoseconds or more",
+        shortcuts_saving_100_or_more
+    );
+}
+
+pub fn day_20_part_2() {
+    let mut racetrack = read_input();
+
+    get_distance_of_track(&mut racetrack);
+
+    let shortcuts = find_shortcuts(&mut racetrack, 20);
+
+    let shortcuts_saving_100_or_more = count_number_of_shortcuts_saving_at_least_100(shortcuts);
+
+    println!(
+        "There are {} shortcuts savinf 100 picoseconds or more",
+        shortcuts_saving_100_or_more
+    );
 }
 
 #[test]
@@ -263,7 +300,7 @@ fn get_example_track_shortcuts() {
 
     get_distance_of_track(&mut racetrack);
 
-    let shortcuts = find_shortcuts(&mut racetrack);
+    let shortcuts = find_shortcuts(&mut racetrack, 2);
 
     let number_saving_2 = *shortcuts.get(&2).unwrap_or(&0);
     let number_saving_4 = *shortcuts.get(&4).unwrap_or(&0);
@@ -288,4 +325,59 @@ fn get_example_track_shortcuts() {
     assert_eq!(number_saving_38, 1);
     assert_eq!(number_saving_40, 1);
     assert_eq!(number_saving_64, 1);
+}
+
+#[test]
+fn get_example_track_shortcuts_part_2() {
+    let race_track = "###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############"
+        .to_string();
+    let mut racetrack = convert_string_to_racetrack(race_track);
+
+    get_distance_of_track(&mut racetrack);
+
+    let shortcuts = find_shortcuts(&mut racetrack, 20);
+
+    let number_saving_50 = *shortcuts.get(&50).unwrap_or(&0);
+    let number_saving_52 = *shortcuts.get(&52).unwrap_or(&0);
+    let number_saving_54 = *shortcuts.get(&54).unwrap_or(&0);
+    let number_saving_56 = *shortcuts.get(&56).unwrap_or(&0);
+    let number_saving_58 = *shortcuts.get(&58).unwrap_or(&0);
+    let number_saving_60 = *shortcuts.get(&60).unwrap_or(&0);
+    let number_saving_62 = *shortcuts.get(&62).unwrap_or(&0);
+    let number_saving_64 = *shortcuts.get(&64).unwrap_or(&0);
+    let number_saving_66 = *shortcuts.get(&66).unwrap_or(&0);
+    let number_saving_68 = *shortcuts.get(&68).unwrap_or(&0);
+    let number_saving_70 = *shortcuts.get(&70).unwrap_or(&0);
+    let number_saving_72 = *shortcuts.get(&72).unwrap_or(&0);
+    let number_saving_74 = *shortcuts.get(&74).unwrap_or(&0);
+    let number_saving_76 = *shortcuts.get(&76).unwrap_or(&0);
+
+    assert_eq!(number_saving_50, 32);
+    assert_eq!(number_saving_52, 31);
+    assert_eq!(number_saving_54, 29);
+    assert_eq!(number_saving_56, 39);
+    assert_eq!(number_saving_58, 25);
+    assert_eq!(number_saving_60, 23);
+    assert_eq!(number_saving_62, 20);
+    assert_eq!(number_saving_64, 19);
+    assert_eq!(number_saving_66, 12);
+    assert_eq!(number_saving_68, 14);
+    assert_eq!(number_saving_70, 12);
+    assert_eq!(number_saving_72, 22);
+    assert_eq!(number_saving_74, 4);
+    assert_eq!(number_saving_76, 3);
 }
