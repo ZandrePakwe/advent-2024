@@ -1,9 +1,6 @@
-use std::{
-    fs,
-    ops::Index,
-    sync::{atomic::AtomicUsize, Arc},
-    thread,
-};
+use std::
+    fs
+;
 
 fn can_be_made_from_segments(segments: &Vec<String>, string_to_build: &str) -> bool {
     for segment in segments.clone() {

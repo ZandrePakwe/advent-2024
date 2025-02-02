@@ -2,8 +2,6 @@ use std::{
     cmp::Reverse,
     collections::{BinaryHeap, HashMap},
     fs,
-    ops::Sub,
-    usize,
 };
 
 use strum::{EnumIter, IntoEnumIterator};
